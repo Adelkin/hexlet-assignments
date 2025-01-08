@@ -23,16 +23,22 @@ public final class App {
 
         // BEGIN
         app.get("/users", ctx -> {
-            // Получаем параметр term
-            String term = ctx.queryParam("term");
+            var term = ctx.queryParam("term");
+            List<User> users;
+            if (term == null) {
+                users = USERS;
+            } else {
+                users = USERS
+                        .stream()
+                        .filter(u -> {
+                            return StringUtils.startsWithIgnoreCase(u.getFirstName(), term);
+                        })
+                        .toList();
+            }
 
-            // Фильтруем пользователей по началу имени (игнорируя регистр)
-            List<User> filteredUsers = USERS.stream()
-                    .filter(user -> StringUtils.startsWithIgnoreCase(user.getFirstName(), term))
-                    .toList();
+            var page = new UsersPage(users, term);
+            ctx.render("users/index.jte", model("page", page));
 
-            // Передаем список пользователей и значение term в шаблон
-            ctx.render("users/index.jte", model("page", new UsersPage(filteredUsers, term)));
         });
         // END
 
